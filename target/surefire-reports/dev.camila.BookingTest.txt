@@ -1,0 +1,12 @@
+-------------------------------------------------------------------------------
+Test set: dev.camila.BookingTest
+-------------------------------------------------------------------------------
+Tests run: 6, Failures: 2, Errors: 0, Skipped: 0, Time elapsed: 7.79 s <<< FAILURE! - in dev.camila.BookingTest
+deleteBooking_returnOkIfExistingId  Time elapsed: 0.706 s  <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <201> but was: <403>
+	at dev.camila.BookingTest.deleteBooking_returnOkIfExistingId(BookingTest.java:151)
+
+partialUpdateBooking_returnOkIfExistingId  Time elapsed: 0.03 s  <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <200> but was: <403>
+	at dev.camila.BookingTest.partialUpdateBooking_returnOkIfExistingId(BookingTest.java:136)
+

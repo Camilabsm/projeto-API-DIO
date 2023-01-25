@@ -1,11 +1,8 @@
 package dev.camila;
 
-import dev.camila.Booking;
-import dev.camila.BookingDates;
-import dev.camila.User;
 import com.github.javafaker.Faker;
+
 import io.restassured.RestAssured;
-import io.restassured.config.RestAssuredConfig;
 import io.restassured.filter.log.ErrorLoggingFilter;
 import io.restassured.filter.log.ResponseLoggingFilter;
 import io.restassured.filter.log.RequestLoggingFilter;
@@ -13,11 +10,10 @@ import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 import org.junit.jupiter.api.*;
+import java.util.Random;
 
-import static org.junit.Assert.*;
 import static io.restassured.RestAssured.given;
 import static io.restassured.config.LogConfig.logConfig;
-import static io.restassured.module.jsv.JsonSchemaValidator.*;
 import static org.hamcrest.Matchers.*;
 
 
@@ -28,7 +24,7 @@ public class BookingTest
     private static Booking booking;
     private static BookingDates bookingDates;
     private static User user;
-    
+
     @BeforeAll
     public static void setUp(){
         RestAssured.baseURI = "https://restful-booker.herokuapp.com/";
@@ -68,34 +64,87 @@ public void getAllBookingsById_returnOk(){
 }
 
 @Test
-public void  getAllBookingsByUserFirstName_BookingExists_returnOk(){
-                request
-                    .when()
-                        .queryParam("firstName", "Carol")
-                        .get("/booking")
-                    .then()
-                        .assertThat()
-                        .statusCode(200)
-                        .contentType(ContentType.JSON)
-                    .and()
-                    .body("results", hasSize(greaterThan(0)));
-
+public void  getBookingById_returnOkIfExistingId(){
+    Random random = new Random();
+    int id = random.nextInt(0, 1000);
+    Response response = request
+    .when()
+        .pathParam("idNumber", id)
+        .get("/booking/{idNumber}")
+    .then()
+        .extract()
+        .response();
+    
+    Assertions.assertNotNull(response);
+    Assertions.assertEquals(200, response.statusCode());   
 }
 
 @Test
-public void  CreateBooking_WithValidData_returnOk(){
+public void  createBooking_WithValidData_returnOk(){
 
     given().config(RestAssured.config().logConfig(logConfig().enableLoggingOfRequestAndResponseIfValidationFails()))
+            .contentType(ContentType.JSON)
+        .when()
+            .body(booking)
+            .post("/booking")
+        .then()
+            .assertThat()
+            .statusCode(200)
+            .contentType(ContentType.JSON).and().time(lessThan(2000L));
+}
+
+@Test
+public void updateBooking_returnOkIfExistingId(){
+    Random random = new Random();
+    int id2 = random.nextInt(0, 1000);
+    String ids = Integer.toString(id2);
+
+        RestAssured.given().baseUri("https://restful-booker.herokuapp.com/booking")
+                .basePath(ids)
                 .contentType(ContentType.JSON)
-                    .when()
-                    .body(booking)
-                    .post("/booking")
-                    .then()
-                    //.body(matchesJsonSchemaInClasspath("createBookingRequestSchema.json"))
-                    //.and()
+                .auth().basic("admin", "password123")
+                .body(booking)
+                .when()
+                    .put()
+                .then()
                     .assertThat()
                     .statusCode(200)
-                    .contentType(ContentType.JSON).and().time(lessThan(2000L));
+                .and()
+                    .statusLine(containsString("OK")); 
+}
+
+@Test
+public void partialUpdateBooking_returnOkIfExistingId(){
+    Random random = new Random();
+    int id = random.nextInt(0, 1000);
+    Response response = request
+    .when()
+        .auth().basic("admin", "password123")
+        .pathParam("idNumber", id)
+        .patch("/booking/{idNumber}", booking.depositpaid.equals(false))
+    .then()
+        .extract()
+        .response();
+    
+    Assertions.assertNotNull(response);
+    Assertions.assertEquals(200, response.statusCode());   
+}
+
+@Test
+public void deleteBooking_returnOkIfExistingId(){
+    Response response = request
+		.when()
+            .auth().basic("admin", "password123")
+        .and()
+            .delete("/booking/25")
+		.then()
+            .extract()
+            .response();
+                      
+        Assertions.assertNotNull(response);
+        Assertions.assertEquals(201, response.statusCode());
+        
 }
 
 }
+
